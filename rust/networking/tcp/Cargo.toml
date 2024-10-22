@@ -1,0 +1,9 @@
+[package]
+name = "NetWorking"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bitflags = "2.6.0"
+etherparse = "0.16.0"
+tun-tap = "0.1.4"

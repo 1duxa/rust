@@ -1,0 +1,13 @@
+digraph G {
+	"Kyiv" -> "London" [label = "150"];
+	"Kyiv" -> "Sydney" [label = "500"];
+	"London" -> "Paris" [label = "100"];
+	"London" -> "Kyiv" [label = "150"];
+	"Paris" -> "New York" [label = "200"];
+	"Paris" -> "London" [label = "100"];
+	"New York" -> "Tokyo" [label = "400"];
+	"New York" -> "Paris" [label = "200"];
+	"Tokyo" -> "Sydney" [label = "300"];
+	"Tokyo" -> "New York" [label = "400"];
+	"Sydney" -> "Kyiv" [label = "500"];
+}

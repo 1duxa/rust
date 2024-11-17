@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 #[allow(dead_code)]
 mod graph_ops {
     use std::cell::RefCell;
-    use std::collections::{HashMap, HashSet};
+    use std::collections::HashMap;
     use std::rc::Rc;
 
     #[derive(Debug)]
@@ -11,69 +13,61 @@ mod graph_ops {
     }
 
     impl Graph {
-        pub fn new(name: impl Into<String>) -> Graph {
+        pub fn new(name: impl Into<String>, head: Rc<RefCell<Node>>) -> Graph {
             Graph {
                 name: name.into(),
-                head: Rc::new(RefCell::new(Node::new(1))),
+                head,
             }
         }
-        fn walk_recursive(
-            node: Rc<RefCell<Node>>,
-            visited: &mut HashSet<i8>,
-            path: &mut Vec<(i8, i32)>,
-            paths: &mut Vec<Vec<(i8, i32)>>,
-        ) {
-            let curr_node = node.borrow();
-            if visited.contains(&curr_node.val) {
-                return;
-            }
-            visited.insert(curr_node.val);
-            path.push((curr_node.val, 0)); // weight will be updated when returning
 
-            if curr_node.val == 7 {
-                paths.push(path.clone());
-            } else {
-                for edge in &curr_node.next_nodes {
-                    if edge.direction {
-                        let mut new_path = path.clone();
-                        new_path.last_mut().unwrap().1 = edge.weight;
-                        Graph::walk_recursive(Rc::clone(&edge.node), visited, &mut new_path, paths);
+        pub fn floyd_warshall(
+            &self,
+            weight_map: HashMap<i8, HashMap<i8, i32>>,
+        ) -> HashMap<i8, HashMap<i8, i32>> {
+            let mut distances = HashMap::new();
+            for &src in weight_map.keys() {
+                distances.entry(src).or_insert_with(HashMap::new);
+                for (&dest, &weight) in &weight_map[&src] {
+                    distances.get_mut(&src).unwrap().insert(dest, weight);
+                }
+            }
+
+            for &node in weight_map.keys() {
+                distances
+                    .entry(node)
+                    .or_insert_with(HashMap::new)
+                    .insert(node, 0);
+            }
+
+            let nodes: Vec<i8> = weight_map.keys().copied().collect();
+            for &k in &nodes {
+                for &i in &nodes {
+                    for &j in &nodes {
+                        let through_k = distances
+                            .get(&i)
+                            .and_then(|m| m.get(&k))
+                            .cloned()
+                            .unwrap_or(i32::MAX)
+                            .saturating_add(
+                                distances
+                                    .get(&k)
+                                    .and_then(|m| m.get(&j))
+                                    .cloned()
+                                    .unwrap_or(i32::MAX),
+                            );
+                        let current_distance = distances
+                            .get(&i)
+                            .and_then(|m| m.get(&j))
+                            .cloned()
+                            .unwrap_or(i32::MAX);
+
+                        if through_k < current_distance {
+                            distances.get_mut(&i).unwrap().insert(j, through_k);
+                        }
                     }
                 }
             }
-
-            visited.remove(&curr_node.val);
-        }
-
-        fn print_paths(&self, paths: &[Vec<(i8, i32)>]) {
-            for path in paths {
-                for &(node, weight) in path {
-                    print!("{} ({} weight) -> ", node, weight);
-                }
-                println!();
-            }
-        }
-
-        pub fn find_shortest_path(&self, from: i8, to: i8) -> Option<Vec<(i8, i32)>> {
-            let mut visited = HashSet::new();
-            let mut path = vec![];
-            let mut paths = vec![];
-            Graph::walk_recursive(Rc::clone(&self.head), &mut visited, &mut path, &mut paths);
-
-            let mut shortest_path = None;
-            let mut min_weight = i32::MAX;
-
-            for path in paths {
-                if path.first().unwrap().0 == from && path.last().unwrap().0 == to {
-                    let total_weight: i32 = path.iter().map(|&(_, weight)| weight).sum();
-                    if total_weight < min_weight {
-                        min_weight = total_weight;
-                        shortest_path = Some(path);
-                    }
-                }
-            }
-
-            shortest_path
+            distances
         }
 
         pub fn create_weight_map(&self) -> HashMap<i8, HashMap<i8, i32>> {
@@ -116,7 +110,7 @@ mod graph_ops {
     pub struct Edge {
         pub node: Rc<RefCell<Node>>,
         pub weight: i32,
-        pub direction: bool, // true -> , false <-
+        pub direction: bool,
     }
 
     impl Node {
@@ -193,20 +187,20 @@ fn main() {
         node7_borrow.add_edge(Rc::clone(&node6), 10, false);
     }
 
-    let graph = Graph::new("d93b5375-e1bf-4a59-a957-af0ebe8b57ea");
+    let graph = Graph::new("d93b5375-e1bf-4a59-a957-af0ebe8b57ea", node1);
     {
         let mut graph_head_borrow = graph.head.borrow_mut();
         graph_head_borrow.add_edge(Rc::clone(&node3), 11, true);
         graph_head_borrow.add_edge(Rc::clone(&node2), 16, true);
     }
 
-    //let weight_matrix = graph.create_weight_map();
-    //    Graph::floyd_warshall(weight_matrix);
+    let weight_matrix = graph.create_weight_map();
+    println!("{:#?}", weight_matrix);
+    let res = graph.floyd_warshall(weight_matrix);
+    println!("{:#?}", res);
+    find_from_to(res, 1, 6);
+}
 
-    let res = graph.find_shortest_path(2, 7);
-    if let Some(sigma) = res {
-        for skibidi in sigma {
-            println!("{:?}", skibidi);
-        }
-    }
+pub fn find_from_to(weights: HashMap<i8, HashMap<i8, i32>>, start: i8, end: i8) {
+    println!("{}", weights[&start][&end]);
 }

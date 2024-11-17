@@ -1,76 +1,75 @@
-use std::collections::HashMap;
-
 use chrono::{DateTime, Duration, Utc};
 
-pub fn init_map() -> HashMap<String, (DateTime<Utc>, DateTime<Utc>)> {
-    let mut activities: HashMap<String, (DateTime<Utc>, DateTime<Utc>)> = HashMap::new();
-    activities.insert(
-        "Math".to_string(),
-        (Utc::now(), Utc::now() + Duration::minutes(20)),
-    );
-    activities.insert(
-        "Physics".to_string(),
-        (
-            Utc::now() - Duration::minutes(30),
-            Utc::now() + Duration::minutes(30),
-        ),
-    );
-    activities.insert(
-        "Singing".to_string(),
-        (
-            Utc::now() + Duration::hours(1),
-            Utc::now() + Duration::hours(2),
-        ),
-    );
-    activities.insert(
-        "Helloing".to_string(),
-        (
-            Utc::now() + Duration::hours(3),
-            Utc::now() + Duration::hours(4),
-        ),
-    );
-    activities.insert(
-        "Ma".to_string(),
-        (
-            Utc::now() + Duration::hours(4),
-            Utc::now() + Duration::minutes(30),
-        ),
-    );
-    activities.insert(
-        "Sigma".to_string(),
-        (
-            Utc::now() + Duration::hours(5),
-            Utc::now() + Duration::hours(6),
-        ),
-    );
-    activities.insert(
-        "Skibidi".to_string(),
-        (
-            Utc::now() + Duration::hours(2),
-            Utc::now() + Duration::hours(3),
-        ),
-    );
-    activities.insert(
-        "Zari".to_string(),
-        (
-            Utc::now() + Duration::hours(6),
-            Utc::now() + Duration::hours(7),
-        ),
-    );
-    activities
+#[derive(Debug, Clone)]
+pub struct Activity {
+    name: String,
+    start: DateTime<Utc>,
+    end: DateTime<Utc>,
+    priority: i32,
 }
-pub fn display_subjects(subjects: HashMap<String, (DateTime<Utc>, DateTime<Utc>)>) {
-    for subject in subjects {
+
+pub fn init_map() -> Vec<Activity> {
+    vec![
+        Activity {
+            name: "Math".to_string(),
+            start: Utc::now(),
+            end: Utc::now() + Duration::minutes(20),
+            priority: 1,
+        },
+        Activity {
+            name: "Physics".to_string(),
+            start: Utc::now() - Duration::minutes(30),
+            end: Utc::now() + Duration::minutes(30),
+            priority: 2,
+        },
+        Activity {
+            name: "Singing".to_string(),
+            start: Utc::now() + Duration::hours(1),
+            end: Utc::now() + Duration::hours(2),
+            priority: 1,
+        },
+        Activity {
+            name: "ASD".to_string(),
+            start: Utc::now() - Duration::hours(3),
+            end: Utc::now() - Duration::hours(2),
+            priority: 1,
+        },
+        Activity {
+            name: "GCP".to_string(),
+            start: Utc::now() - Duration::minutes(30),
+            end: Utc::now() + Duration::minutes(30),
+            priority: 2,
+        },
+    ]
+}
+
+pub fn select_priority_activities(mut activities: Vec<Activity>) -> Vec<Activity> {
+    activities.sort_by(|a, b| a.end.cmp(&b.end).then(b.priority.cmp(&a.priority)));
+
+    let mut selected_activities: Vec<Activity> = Vec::new();
+    let mut last_end_time = Utc::now() - Duration::hours(24);
+
+    for activity in activities {
+        if activity.start >= last_end_time {
+            selected_activities.push(activity.clone());
+            last_end_time = activity.end;
+        }
+    }
+
+    selected_activities
+}
+
+pub fn display_activities(activities: Vec<Activity>) {
+    for activity in activities {
         println!(
-            "SBJ: {}, S: {} | E: {}",
-            subject.0,
-            subject.1 .0.time(),
-            subject.1 .1.time()
+            "Activity: {}, Start: {}, End: {}, Priority: {}",
+            activity.name, activity.start, activity.end, activity.priority
         );
     }
 }
-pub fn sort(subj: HashMap<String, (DateTime<Utc>, DateTime<Utc>)>) {}
+
 fn main() {
-    let map = init_map();
-    display_subjects(map);
+    let activities = init_map();
+    let selected_activities = select_priority_activities(activities);
+    display_activities(selected_activities);
 }

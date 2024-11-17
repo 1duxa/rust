@@ -97,6 +97,7 @@ fn main() {
 
     let mut a = 66;
     let mut b = 88;
+
     let gcd_task3 = gcd_two(&mut a, &mut b);
 
     if gcd_task3 > 1 {

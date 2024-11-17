@@ -5,6 +5,9 @@ use ticket_fields::{TicketDescription, TicketTitle};
 pub struct TicketStore {
     tickets: Vec<Ticket>,
 }
+impl IntoIterator for TicketStore {
+    fn into_iter(self) -> Self::IntoIter {}
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Ticket {

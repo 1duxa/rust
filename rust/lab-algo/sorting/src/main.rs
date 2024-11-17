@@ -1,5 +1,5 @@
 use rand::Rng;
-use std::{env, usize};
+use std::env;
 
 pub fn partition(arr: &mut Vec<f64>, low: usize, high: usize) -> usize {
     let pivot = arr[low];
@@ -33,6 +33,7 @@ pub fn quick_sort(arr: &mut Vec<f64>, low: usize, high: usize) {
         quick_sort(arr, pi + 1, high);
     }
 }
+
 pub fn merge_sort(A: &mut Vec<f64>, start: usize, end: usize) {
     if start < end {
         let mid = (start + end) / 2;
@@ -45,34 +46,34 @@ pub fn merge_sort(A: &mut Vec<f64>, start: usize, end: usize) {
 pub fn merge(A: &mut Vec<f64>, start: usize, mid: usize, end: usize) {
     let mut p = start;
     let mut q = mid + 1;
-    let mut Arr: Vec<f64> = vec![0.0; end - start + 1];
+    let mut arr: Vec<f64> = vec![0.0; end - start + 1];
     let mut k = 0;
 
     while p <= mid && q <= end {
         if A[p] < A[q] {
-            Arr[k] = A[p];
+            arr[k] = A[p];
             p += 1;
         } else {
-            Arr[k] = A[q];
+            arr[k] = A[q];
             q += 1;
         }
         k += 1;
     }
 
     while p <= mid {
-        Arr[k] = A[p];
+        arr[k] = A[p];
         p += 1;
         k += 1;
     }
 
     while q <= end {
-        Arr[k] = A[q];
+        arr[k] = A[q];
         q += 1;
         k += 1;
     }
 
-    for i in 0..Arr.len() {
-        A[start + i] = Arr[i];
+    for i in 0..arr.len() {
+        A[start + i] = arr[i];
     }
 }
 
@@ -87,25 +88,46 @@ pub fn split_vec_in_random_place(some_vec: Vec<f64>) -> (Vec<f64>, Vec<f64>) {
 }
 
 fn main() {
-    env::set_var("RUST_BACKTRACE", "full");
+    unsafe {
+        env::set_var("RUST_BACKTRACE", "full");
+    }
     let mut rng = rand::thread_rng();
     let numbers: Vec<f64> = (0..=45).map(|_| rng.gen_range(0.0..=70.0)).collect();
-    let mut numbers_copy = numbers.clone();
+    let numbers_copy = numbers.clone();
     let numbers_len = numbers_copy.len() - 1;
 
-    merge_sort(&mut numbers_copy, 0, numbers_len);
-    println!("{:#?}", numbers_copy);
+    //    merge_sort(&mut numbers_copy, 0, numbers_len);
+    //    println!("Merge sort test: {:#?}", numbers_copy);
 
-    let res = split_vec_in_random_place(numbers);
-    println!("Vec 1 {:#?}   \n\t\r   Vec 2 {:#?}", res.0, res.1);
+    let random_even_index = rng.gen_range(0..=numbers_len / 2) * 2;
 
-    let mut part_1 = res.0;
-    let part_1_len = part_1.len();
-    merge_sort(&mut part_1, 0, part_1_len - 1);
-    println!("{:#?}", part_1);
+    // SPLIT
+    let (left_part, right_part) = numbers_copy.split_at(random_even_index);
+    let mut left_part = left_part.to_vec();
+    let mut right_part = right_part.to_vec();
+    let left_part_len = left_part.len();
+    let right_part_len = right_part.len();
+    // ASC
+    quick_sort(&mut left_part, 0, left_part_len - 1);
 
-    let mut part_2 = res.1;
-    let part_2_len = part_2.len();
-    merge_sort(&mut part_2, 0, part_2_len - 1);
-    println!("{:#?}", part_2);
+    //DESC
+    quick_sort(&mut right_part, 0, right_part_len - 1);
+    right_part.reverse();
+
+    // LEFT SUM
+    let left_sum: f64 = left_part.iter().sum();
+
+    // AVG
+    let right_mean: f64 = if !right_part.is_empty() {
+        right_part.iter().sum::<f64>() / right_part.len() as f64
+    } else {
+        0.0
+    };
+
+    println!("Sorted array: {:#?}", numbers_copy);
+    println!("Random even index: {}", random_even_index);
+    println!("Left part: {:#?}", left_part);
+    println!("Right part: {:#?}", right_part);
+    println!("Sum of left part: {}", left_sum);
+    println!("Arithmetic mean of right part: {}", right_mean);
 }

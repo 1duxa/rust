@@ -1,10 +1,10 @@
-mod ast;
+mod lexer;
+
+use lexer::lexer3000::MegaLexer3000;
+mod parser;
+use parser::mega_parser::*;
 fn main() {
-    let input = "7088885+55";
-    let mut lexer = ast::lexer::Lexer::new(input);
-    let mut tokens = Vec::new();
-    while let Some(token) = lexer.next_token(){
-        tokens.push(token);
-    }
+    let tokens = MegaLexer3000("1234+34555-523".to_string()).lexify();
     println!("{:?}", tokens);
+    Parser(tokens).parse();
 }
